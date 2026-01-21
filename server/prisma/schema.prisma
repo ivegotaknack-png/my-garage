@@ -1,0 +1,95 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       String    @id @default(uuid())
+  email    String    @unique
+  name     String?
+  vehicles Vehicle[]
+}
+
+model Vehicle {
+  id              String              @id @default(uuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id])
+  year            Int
+  make            String
+  model           String
+  vin             String?
+  licensePlate    String?
+  currentMileage  Int?
+  records         MaintenanceRecord[]
+  reminders       Reminder[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model MaintenanceRecord {
+  id          String                 @id @default(uuid())
+  vehicleId   String
+  vehicle     Vehicle                @relation(fields: [vehicleId], references: [id])
+  date        DateTime
+  type        String // 'SELF' or 'SHOP'
+  mileage     Int
+  description String
+  totalCost   Float
+  notes       String?
+  selfDetails SelfMaintenanceDetail?
+  shopDetails ShopMaintenanceDetail?
+  attachments Attachment[]
+  createdAt   DateTime               @default(now())
+}
+
+model SelfMaintenanceDetail {
+  id         String            @id @default(uuid())
+  recordId   String            @unique
+  record     MaintenanceRecord @relation(fields: [recordId], references: [id])
+  laborHours Float?
+  diyNotes   String?
+  parts      MaintenancePart[]
+}
+
+model MaintenancePart {
+  id           String                @id @default(uuid())
+  selfMaintId  String
+  selfMaint    SelfMaintenanceDetail @relation(fields: [selfMaintId], references: [id])
+  partName     String
+  partNumber   String?
+  cost         Float
+  quantity     Int                   @default(1)
+}
+
+model ShopMaintenanceDetail {
+  id       String            @id @default(uuid())
+  recordId String            @unique
+  record   MaintenanceRecord @relation(fields: [recordId], references: [id])
+  shopName String
+}
+
+model Attachment {
+  id        String            @id @default(uuid())
+  recordId  String
+  record    MaintenanceRecord @relation(fields: [recordId], references: [id])
+  filePath  String
+  mimeType  String
+  label     String?
+  createdAt DateTime          @default(now())
+}
+
+model Reminder {
+  id         String    @id @default(uuid())
+  vehicleId  String
+  vehicle    Vehicle   @relation(fields: [vehicleId], references: [id])
+  type       String // 'DATE' or 'MILEAGE'
+  dueDate    DateTime?
+  dueMileage Int?
+  note       String
+  isSent     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+}

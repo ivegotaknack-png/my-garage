@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
+build
+dist
+
+# Misc
+.DS_Store
+.env
+.npm
+*.log
+
+# Database
+*.db
+*.db-journal
+/server/prisma/*.db
+/server/prisma/*.db-journal
+
+# IDEs
+.vscode
+.idea
+*.swp
