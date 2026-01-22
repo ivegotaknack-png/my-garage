@@ -1,35 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Calendar, Clock, Save } from 'lucide-react';
-import { getVehicles, createReminder } from '../services/api';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Calendar, Clock, Save, Trash2 } from 'lucide-react';
+import { getReminderDetail, updateReminder, deleteReminder } from '../services/api';
 
-export function AddReminder() {
+export function EditReminder() {
+    const { id } = useParams();
     const navigate = useNavigate();
-    const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
         vehicleId: '',
-        type: 'DATE', // 'DATE' or 'MILEAGE'
+        type: 'DATE',
         dueDate: '',
         dueMileage: '',
         note: ''
     });
+    const [vehicleName, setVehicleName] = useState('');
 
     useEffect(() => {
-        getVehicles()
+        getReminderDetail(id)
             .then(res => {
-                setVehicles(res.data);
-                if (res.data.length > 0) {
-                    setFormData(prev => ({ ...prev, vehicleId: res.data[0].id }));
-                }
+                const data = res.data;
+                setFormData({
+                    vehicleId: data.vehicleId,
+                    type: data.type,
+                    dueDate: data.dueDate ? new Date(data.dueDate).toISOString().split('T')[0] : '',
+                    dueMileage: data.dueMileage || '',
+                    note: data.note
+                });
+                // We'd ideally fetch vehicle name too, but let's just show ID or skip for now to keep it simple
+                // or assume the user knows which vehicle this reminder is for.
                 setLoading(false);
             })
             .catch(err => {
-                console.error("Failed to fetch vehicles", err);
+                console.error("Failed to fetch reminder", err);
                 setLoading(false);
             });
-    }, []);
+    }, [id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -40,47 +47,57 @@ export function AddReminder() {
         e.preventDefault();
         setSaving(true);
         try {
-            await createReminder(formData);
-            navigate(`/vehicles/${formData.vehicleId}`);
+            await updateReminder(id, formData);
+            navigate('/');
         } catch (error) {
-            console.error('Failed to create reminder', error);
+            console.error('Failed to update reminder', error);
             alert('Failed to save reminder');
         } finally {
             setSaving(false);
         }
     };
 
+    const handleDelete = async () => {
+        if (window.confirm('Are you sure you want to delete this reminder?')) {
+            try {
+                await deleteReminder(id);
+                navigate('/');
+            } catch (error) {
+                console.error('Failed to delete reminder', error);
+                alert('Failed to delete reminder');
+            }
+        }
+    };
+
+    if (loading) return <div className="p-8 text-center">Loading...</div>;
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
             <div className="mx-auto max-w-2xl">
-                <header className="mb-6 flex items-center gap-4">
+                <header className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                        >
+                            <ArrowLeft size={24} />
+                        </button>
+                        <h1 className="text-2xl font-bold text-gray-900">Edit Reminder</h1>
+                    </div>
+
                     <button
-                        onClick={() => navigate(-1)}
-                        className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                        onClick={handleDelete}
+                        className="rounded-full p-2 text-red-500 hover:bg-red-50 hover:text-red-700"
+                        title="Delete Reminder"
                     >
-                        <ArrowLeft size={24} />
+                        <Trash2 size={24} />
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Set Reminder</h1>
                 </header>
 
                 <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                    {/* Vehicle Selection */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Vehicle</label>
-                        <select
-                            name="vehicleId"
-                            value={formData.vehicleId}
-                            onChange={handleChange}
-                            className="w-full rounded-lg border-gray-300 p-2.5 shadow-sm ring-1 ring-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                            disabled={loading}
-                        >
-                            {loading && <option>Loading vehicles...</option>}
-                            {vehicles.map(v => (
-                                <option key={v.id} value={v.id}>
-                                    {v.year} {v.make} {v.model}
-                                </option>
-                            ))}
-                        </select>
+                    {/* Read-only info */}
+                    <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+                        Editing reminder for Vehicle ID: <span className="font-mono font-semibold">{formData.vehicleId}</span>
                     </div>
 
                     {/* Type Selection */}
@@ -166,11 +183,11 @@ export function AddReminder() {
                         </button>
                         <button
                             type="submit"
-                            disabled={saving || loading || !formData.vehicleId}
+                            disabled={saving}
                             className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50"
                         >
                             <Save size={18} />
-                            {saving ? 'Saving...' : 'Save Reminder'}
+                            {saving ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>
                 </form>

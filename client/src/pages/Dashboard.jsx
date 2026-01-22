@@ -3,30 +3,56 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Bell } from 'lucide-react';
 import { VehicleCard } from '../components/VehicleCard';
 import { ReminderList } from '../components/ReminderList';
-import { getVehicles } from '../services/api';
-import { MOCK_REMINDERS } from '../data/mock';
+import { getVehicles, getReminders, deleteVehicle, deleteReminder } from '../services/api';
 
 export function Dashboard() {
     const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
-    // Defensive fallback if MOCK_REMINDERS import fails or is undefined
-    const [reminders, setReminders] = useState(MOCK_REMINDERS || []);
+    const [reminders, setReminders] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getVehicles()
-            .then(res => {
-                setVehicles(res.data);
+        Promise.all([getVehicles(), getReminders()])
+            .then(([vRes, rRes]) => {
+                setVehicles(vRes.data);
+                setReminders(rRes.data);
                 setLoading(false);
             })
             .catch(err => {
-                console.error("Failed to fetch vehicles", err);
+                console.error("Failed to fetch dashboard data", err);
                 setLoading(false);
             });
     }, []);
 
     const handleVehicleClick = (v) => {
         navigate(`/vehicles/${v.id}`);
+    };
+
+    const handleDeleteVehicle = async (v) => {
+        if (window.confirm(`Are you sure you want to delete the ${v.year} ${v.make} ${v.model}?`)) {
+            try {
+                await deleteVehicle(v.id);
+                setVehicles(prev => prev.filter(veh => veh.id !== v.id));
+                // Refresh reminders too in case some were tied to this vehicle
+                const rRes = await getReminders();
+                setReminders(rRes.data);
+            } catch (error) {
+                console.error("Failed to delete vehicle", error);
+                alert("Failed to delete vehicle");
+            }
+        }
+    };
+
+    const handleDeleteReminder = async (id) => {
+        if (window.confirm("Are you sure you want to delete this reminder?")) {
+            try {
+                await deleteReminder(id);
+                setReminders(prev => prev.filter(r => r.id !== id));
+            } catch (error) {
+                console.error("Failed to delete reminder", error);
+                alert("Failed to delete reminder");
+            }
+        }
     };
 
     return (
@@ -56,6 +82,7 @@ export function Dashboard() {
                                 vehicle={vehicle}
                                 onClick={handleVehicleClick}
                                 onEdit={(v) => console.log('Edit', v)}
+                                onDelete={handleDeleteVehicle}
                             />
                         ))}
 
@@ -80,7 +107,11 @@ export function Dashboard() {
                             Upcoming
                         </h2>
                     </div>
-                    <ReminderList reminders={reminders} />
+                    <ReminderList
+                        reminders={reminders}
+                        onDelete={handleDeleteReminder}
+                        onComplete={handleDeleteReminder} // For now, marking as done also deletes it
+                    />
                 </div>
             </div>
         </div>

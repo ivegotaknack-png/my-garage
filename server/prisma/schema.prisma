@@ -17,7 +17,7 @@ model User {
 model Vehicle {
   id              String              @id @default(uuid())
   userId          String
-  user            User                @relation(fields: [userId], references: [id])
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   year            Int
   make            String
   model           String
@@ -33,7 +33,7 @@ model Vehicle {
 model MaintenanceRecord {
   id          String                 @id @default(uuid())
   vehicleId   String
-  vehicle     Vehicle                @relation(fields: [vehicleId], references: [id])
+  vehicle     Vehicle                @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   date        DateTime
   type        String // 'SELF' or 'SHOP'
   mileage     Int
@@ -49,7 +49,7 @@ model MaintenanceRecord {
 model SelfMaintenanceDetail {
   id         String            @id @default(uuid())
   recordId   String            @unique
-  record     MaintenanceRecord @relation(fields: [recordId], references: [id])
+  record     MaintenanceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
   laborHours Float?
   diyNotes   String?
   parts      MaintenancePart[]
@@ -58,7 +58,7 @@ model SelfMaintenanceDetail {
 model MaintenancePart {
   id           String                @id @default(uuid())
   selfMaintId  String
-  selfMaint    SelfMaintenanceDetail @relation(fields: [selfMaintId], references: [id])
+  selfMaint    SelfMaintenanceDetail @relation(fields: [selfMaintId], references: [id], onDelete: Cascade)
   partName     String
   partNumber   String?
   cost         Float
@@ -68,14 +68,14 @@ model MaintenancePart {
 model ShopMaintenanceDetail {
   id       String            @id @default(uuid())
   recordId String            @unique
-  record   MaintenanceRecord @relation(fields: [recordId], references: [id])
+  record   MaintenanceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
   shopName String
 }
 
 model Attachment {
   id        String            @id @default(uuid())
   recordId  String
-  record    MaintenanceRecord @relation(fields: [recordId], references: [id])
+  record    MaintenanceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
   filePath  String
   mimeType  String
   label     String?
@@ -85,7 +85,7 @@ model Attachment {
 model Reminder {
   id         String    @id @default(uuid())
   vehicleId  String
-  vehicle    Vehicle   @relation(fields: [vehicleId], references: [id])
+  vehicle    Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   type       String // 'DATE' or 'MILEAGE'
   dueDate    DateTime?
   dueMileage Int?

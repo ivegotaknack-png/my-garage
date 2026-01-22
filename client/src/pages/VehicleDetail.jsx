@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, History, Wrench, Settings } from 'lucide-react';
+import { ArrowLeft, Plus, History, Wrench, Settings, Trash2, Edit2 } from 'lucide-react';
 
-import { getVehicleDetails } from '../services/api';
+import { getVehicleDetails, deleteVehicle, deleteMaintenance } from '../services/api';
 
 export function VehicleDetail() {
     const { id } = useParams();
@@ -21,6 +21,32 @@ export function VehicleDetail() {
                 setLoading(false);
             });
     }, [id]);
+
+    const handleDelete = async () => {
+        if (window.confirm('Are you sure you want to delete this vehicle and all its records?')) {
+            try {
+                await deleteVehicle(id);
+                navigate('/');
+            } catch (error) {
+                console.error('Failed to delete vehicle', error);
+                alert('Failed to delete vehicle');
+            }
+        }
+    };
+
+    const handleDeleteMaintenance = async (recordId) => {
+        if (window.confirm('Are you sure you want to delete this maintenance record?')) {
+            try {
+                await deleteMaintenance(recordId);
+                // Refresh data
+                const res = await getVehicleDetails(id);
+                setVehicle(res.data);
+            } catch (error) {
+                console.error('Failed to delete maintenance record', error);
+                alert('Failed to delete record');
+            }
+        }
+    };
 
     if (loading) return <div className="p-8 text-center">Loading...</div>;
     if (!vehicle) return <div className="p-8 text-center">Vehicle not found</div>;
@@ -46,9 +72,22 @@ export function VehicleDetail() {
                             <h1 className="text-2xl font-bold text-gray-900">{vehicle.year} {vehicle.make} {vehicle.model}</h1>
                             <p className="font-mono text-sm text-gray-500">VIN: {vehicle.vin}</p>
                         </div>
-                        <button className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-                            <Settings size={20} />
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => alert('Settings coming soon!')}
+                                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                title="Vehicle Settings"
+                            >
+                                <Settings size={20} />
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                title="Delete Vehicle"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        </div>
                     </div>
 
                     <div className="mt-6 flex gap-4">
@@ -99,6 +138,24 @@ export function VehicleDetail() {
                                 {record.shopDetails?.shopName && (
                                     <p className="mt-2 text-xs text-gray-400">Performed at {record.shopDetails.shopName}</p>
                                 )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={() => navigate(`/maintenance/${record.id}/edit`)}
+                                    className="rounded-full p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    title="Edit Record"
+                                >
+                                    <Edit2 size={16} />
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteMaintenance(record.id)}
+                                    className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                    title="Delete Record"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                         </div>
                     ))}

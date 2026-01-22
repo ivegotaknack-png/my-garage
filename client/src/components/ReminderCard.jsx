@@ -1,7 +1,9 @@
 import React from 'react';
-import { Bell, Calendar, Clock, CheckCircle } from 'lucide-react';
+import { Bell, Calendar, Clock, CheckCircle, Edit2, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function ReminderCard({ reminder, onComplete, onDelete }) {
+    const navigate = useNavigate();
     const isOverdue = new Date(reminder.dueDate) < new Date();
 
     return (
@@ -29,13 +31,29 @@ export function ReminderCard({ reminder, onComplete, onDelete }) {
                 </div>
             </div>
 
-            <button
-                onClick={() => onComplete(reminder.id)}
-                className="opacity-0 transition-opacity group-hover:opacity-100 rounded-full p-2 text-gray-400 hover:bg-green-50 hover:text-green-600"
-                title="Mark as Done"
-            >
-                <CheckCircle size={20} />
-            </button>
+            <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                    onClick={() => onComplete(reminder.id)}
+                    className="rounded-full p-2 text-gray-400 hover:bg-green-50 hover:text-green-600"
+                    title="Mark as Done"
+                >
+                    <CheckCircle size={20} />
+                </button>
+                <button
+                    onClick={() => navigate(`/reminders/${reminder.id}/edit`)}
+                    className="rounded-full p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
+                    title="Edit Reminder"
+                >
+                    <Edit2 size={20} />
+                </button>
+                <button
+                    onClick={() => onDelete(reminder.id)}
+                    className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    title="Delete Reminder"
+                >
+                    <Trash2 size={20} />
+                </button>
+            </div>
         </div>
     );
 }

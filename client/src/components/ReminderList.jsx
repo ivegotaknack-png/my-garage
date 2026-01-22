@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReminderCard } from './ReminderCard';
 
-export function ReminderList({ reminders }) {
+export function ReminderList({ reminders, onComplete, onDelete }) {
     const navigate = useNavigate();
     if (!reminders || reminders.length === 0) {
         return (
@@ -24,7 +24,8 @@ export function ReminderList({ reminders }) {
                 <ReminderCard
                     key={reminder.id}
                     reminder={reminder}
-                    onComplete={(id) => console.log('Complete:', id)}
+                    onComplete={onComplete}
+                    onDelete={onDelete}
                 />
             ))}
         </div>

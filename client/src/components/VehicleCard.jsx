@@ -50,8 +50,16 @@ export function VehicleCard({ vehicle, onEdit, onDelete, onClick }) {
                 <button
                     onClick={(e) => { e.stopPropagation(); onEdit(vehicle); }}
                     className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-white hover:text-blue-600 hover:shadow-sm"
+                    title="Edit Vehicle"
                 >
                     <Edit2 size={16} />
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(vehicle); }}
+                    className="rounded-lg bg-gray-100 p-2 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:shadow-sm"
+                    title="Delete Vehicle"
+                >
+                    <Trash2 size={16} />
                 </button>
             </div>
         </div>
